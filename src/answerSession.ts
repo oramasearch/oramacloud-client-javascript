@@ -1,5 +1,5 @@
 import type { Results, AnyDocument, SearchParams, AnyOrama, Nullable } from '@orama/orama'
-import { createId } from '@paralleldrive/cuid2'
+import { createId } from '@orama/cuid2'
 import { ORAMA_ANSWER_ENDPOINT } from './constants.js'
 import { OramaClient } from './client.js'
 import { parseSSE, serializeUserContext } from './utils.js'

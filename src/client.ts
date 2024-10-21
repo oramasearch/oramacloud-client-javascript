@@ -2,7 +2,7 @@ import type { Endpoint, IOramaClient, Method, OramaInitResponse, HeartBeatConfig
 import type { SearchParams, Results, AnyDocument, AnyOrama, Nullable, InternalTypedDocument } from '@orama/orama'
 import type { Message, InferenceType, Interaction } from './answerSession.js'
 import { formatElapsedTime } from '@orama/orama/components'
-import { createId } from '@paralleldrive/cuid2'
+import { createId } from '@orama/cuid2'
 
 import { AnswerSession } from './answerSession.js'
 import { Cache } from './cache.js'

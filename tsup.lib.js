@@ -1,7 +1,9 @@
 import { defineConfig } from 'tsup'
+import { fileURLToPath } from 'url'
 
-const entry = new URL('src/index.ts', import.meta.url).pathname
-const outDir = new URL('dist', import.meta.url).pathname
+
+const entry = fileURLToPath(new URL('src/index.ts', import.meta.url))
+const outDir = fileURLToPath(new URL('dist', import.meta.url))
 
 export default defineConfig({
   entry: [entry],
