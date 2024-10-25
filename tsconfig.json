@@ -15,5 +15,5 @@
     "sourceMap": true,
     "moduleResolution": "nodenext"
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests"],
 }

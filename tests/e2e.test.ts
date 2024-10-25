@@ -321,3 +321,32 @@ await t.test('regenerate last answer', async t => {
   assert.equal(state.length, 2)
   assert.equal(state[state.length - 1].query, 'labrador')
 })
+
+t.test('can use custom system prompts', async t => {
+  if (!process.env.ORAMA_E2E_ENDPOINT || !process.env.ORAMA_E2E_API_KEY) {
+    if (!process.env.ORAMA_E2E_ENDPOINT || !process.env.ORAMA_E2E_API_KEY) {
+      t.skip('ORAMA_E2E_ENDPOINT and ORAMA_E2E_API_KEY are not set. E2e tests will be skipped.')
+      return
+    }
+  }
+  
+  const client = new OramaClient({
+    endpoint: process.env.ORAMA_E2E_ENDPOINT!,
+    api_key: process.env.ORAMA_E2E_API_KEY!
+  })
+
+  const session = client
+    .createAnswerSession({
+      systemPrompts: ['sp_italian-prompt-chc4o0']
+    })
+
+  session.setSystemPromptConfiguration({
+    systemPrompts: ['sp_italian-prompt-chc4o0']
+  })
+
+  const res = await session.ask({
+    term: 'what is Orama?'
+  })
+
+  assert.ok(res)
+})

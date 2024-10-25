@@ -2,7 +2,7 @@ import type { Endpoint, IOramaClient, Method, OramaInitResponse, HeartBeatConfig
 import type { SearchParams, Results, AnyDocument, AnyOrama, Nullable, InternalTypedDocument } from '@orama/orama'
 import type { Message, InferenceType, Interaction } from './answerSession.js'
 import { formatElapsedTime } from '@orama/orama/components'
-import { createId } from '@paralleldrive/cuid2'
+import { createId } from '@orama/cuid2'
 
 import { AnswerSession } from './answerSession.js'
 import { Cache } from './cache.js'
@@ -57,6 +57,7 @@ export type AnswerSessionParams = {
     onNewInteractionStarted?: (interactionId: string) => void
     onStateChange?: (state: Interaction[]) => void
   }
+  systemPrompts?: string[]
 }
 
 export { AnswerSession, Message }
@@ -69,7 +70,6 @@ export class OramaClient {
   private readonly collector?: Collector
   private readonly cache?: Cache<Results<AnyDocument>>
   private readonly profile: Profile
-  private systemPrompts?: string[]
   private searchDebounceTimer?: any // NodeJS.Timer
   private searchRequestCounter = 0
   private blockSearchTillAuth = false
@@ -273,7 +273,8 @@ export class OramaClient {
       initialMessages: params?.initialMessages || [],
       oramaClient: this,
       events: params?.events,
-      userContext: params?.userContext
+      userContext: params?.userContext,
+      systemPrompts: params?.systemPrompts ?? []
     })
   }
 
@@ -281,7 +282,7 @@ export class OramaClient {
     this.heartbeat?.stop()
     this.heartbeat = new HeartBeat({
       ...config,
-      endpoint: this.endpoint + `/health?api-key=${this.api_key}`
+      endpoint: `${this.endpoint}/health?api-key=${this.api_key}`
     })
     this.heartbeat.start()
   }
@@ -430,22 +431,5 @@ export class OramaClient {
 
   public reset(): void {
     this.profile.reset()
-  }
-
-  /**
-   * Methods associated with custom system prompts
-   */
-  public setSystemPromptConfiguration(config: { systemPrompts: string[] }): void {
-    if (Array.isArray(config.systemPrompts)) {
-      if (!config.systemPrompts.every((prompt) => typeof prompt === 'string')) {
-        throw new Error('Invalid system prompt configuration')
-      }
-
-      this.systemPrompts = config.systemPrompts
-    }
-  }
-
-  public getSystemPromptConfiguration(): string[] | undefined {
-    return this.systemPrompts
   }
 }
