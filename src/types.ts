@@ -39,19 +39,27 @@ export interface IOramaClient {
   cache?: Partial<CacheConfig> | false
 }
 
+export interface IOramaClientMultiSearch extends Omit<IOramaClient, 'api_key' | 'endpoint'> {
+  endpoint?: string
+  indexes: {
+    api_key: string
+    id: string
+  }[]
+}
+
 export interface TelemetryConfig {
   flushInterval: number
   flushSize: number
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// biome-ignore lint/suspicious/noEmptyInterface: <explanation>
 export interface CacheConfig {}
 
 export interface HeartBeatConfig {
   frequency: number
 }
 
-export type Endpoint = 'search' | 'init' | 'info' | 'health' | 'vector-search2'
+export type Endpoint = 'search' | 'init' | 'info' | 'health' | 'vector-search2' | 'multi_search' | 'init_multi_search'
 
 export type Method = 'GET' | 'POST'
 
