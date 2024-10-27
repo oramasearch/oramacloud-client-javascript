@@ -1,6 +1,6 @@
 import { createId } from '@orama/cuid2'
 import sendBeacon from './sendBeacon.js'
-import { OramaInitResponse } from './types.js'
+import type { OramaInitResponse } from './types.js'
 import { LOCAL_STORAGE_USER_ID_KEY } from './constants.js'
 
 type ProfileConstructor = {

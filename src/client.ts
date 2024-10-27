@@ -1,4 +1,4 @@
-import type { Endpoint, IOramaClient, Method, OramaInitResponse, HeartBeatConfig, OramaError, Override } from './types.js'
+import type { Endpoint, IOramaClient, Method, OramaInitResponse, HeartBeatConfig, OramaError, Override, IOramaClientMultiSearch } from './types.js'
 import type { SearchParams, Results, AnyDocument, AnyOrama, Nullable, InternalTypedDocument } from '@orama/orama'
 import type { Message, InferenceType, Interaction } from './answerSession.js'
 import { formatElapsedTime } from '@orama/orama/components'
@@ -11,6 +11,7 @@ import { Collector } from './collector.js'
 import { HeartBeat } from './heartbeat.js'
 import { version } from '../package.json'
 import { Profile } from './profile.js'
+import { ORAMA_SEARCH_BASE } from './constants.js'
 
 export interface SearchConfig {
   abortController?: AbortController
@@ -22,7 +23,8 @@ export type SearchMode = 'fulltext' | 'vector' | 'hybrid'
 
 type AdditionalSearchParams = {
   mode?: SearchMode
-  returning?: string[]
+  returning?: string[],
+  mergeResults?: boolean
 }
 
 export type AnswerParams = {
@@ -60,12 +62,14 @@ export type AnswerSessionParams = {
   systemPrompts?: string[]
 }
 
-export { AnswerSession, Message }
+export { AnswerSession, type Message }
 
 export class OramaClient {
   private readonly id = createId()
   private readonly api_key: string
   private readonly endpoint: string
+  private readonly multiIndexSearch: boolean
+  private readonly multiIndexIndexes?: IOramaClientMultiSearch['indexes']
   private readonly answersApiBaseURL: string | undefined
   private readonly collector?: Collector
   private readonly cache?: Cache<Results<AnyDocument>>
@@ -77,9 +81,21 @@ export class OramaClient {
   private heartbeat?: HeartBeat
   private initPromise?: Promise<OramaInitResponse | null>
 
-  constructor(params: IOramaClient) {
-    this.api_key = params.api_key
-    this.endpoint = params.endpoint
+  constructor(params: IOramaClient | IOramaClientMultiSearch) {
+    //TODO: fix this once we can handle multi search telemetry
+    if('indexes' in params) {
+      //this telemetry will be wrong
+      this.api_key = params.indexes[0].api_key
+
+      this.multiIndexIndexes = params.indexes
+      this.endpoint = params.endpoint || ORAMA_SEARCH_BASE
+      this.multiIndexSearch = true
+    }else{
+      this.api_key = params.api_key
+      this.endpoint = params.endpoint
+      this.multiIndexSearch = false
+    }
+
     this.answersApiBaseURL = params.answersApiBaseURL
 
     // Enable profile tracking
@@ -129,7 +145,7 @@ export class OramaClient {
   public async search(query: ClientSearchParams, config?: SearchConfig): Promise<Nullable<Results<AnyDocument>>>
   public async search<SchemaType extends object, DocumentType extends InternalTypedDocument<SchemaType> = InternalTypedDocument<SchemaType>>(
     query: ClientSearchParams,
-    config?: SearchConfig
+    config?: SearchConfig,
   ): Promise<Nullable<Results<DocumentType>>> {
     await this.initPromise
 
@@ -150,7 +166,11 @@ export class OramaClient {
     const performSearch = async () => {
       try {
         const timeStart = Date.now()
-        searchResults = await this.fetch<Results<AnyDocument>>('search', 'POST', { q: query, sst: this.searchToken }, config?.abortController)
+        if(this.multiIndexSearch){
+          searchResults = await this.fetch<Results<AnyDocument>>('multi_search', 'POST', { q: {...query, mergeResults:true}, sst: this.searchToken, indexes: this.multiIndexIndexes }, config?.abortController)
+        }else{  
+          searchResults = await this.fetch<Results<AnyDocument>>('search', 'POST', { q: query, sst: this.searchToken }, config?.abortController)
+        }
         const timeEnd = Date.now()
         searchResults.elapsed = await formatElapsedTime(BigInt(timeEnd * CONST.MICROSECONDS_BASE - timeStart * CONST.MICROSECONDS_BASE))
         roundTripTime = timeEnd - timeStart
@@ -379,7 +399,9 @@ export class OramaClient {
     }
 
     const url = new URL(`${this.endpoint}/${path}`)
-    url.searchParams.append('api-key', this.api_key)
+    if(!this.multiIndexSearch){
+      url.searchParams.append('api-key', this.api_key)
+    }
     if (queryParams) {
       for (const [key, value] of Object.entries(queryParams)) {
         if (value) {
