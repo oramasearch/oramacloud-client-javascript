@@ -1,7 +1,7 @@
 import type { SearchEvent, ICollector, TelemetryConfig } from './types.js'
 import pkg from '../package.json'
 import sendBeacon from './sendBeacon.js'
-import { Profile } from './profile.js'
+import type { Profile } from './profile.js'
 
 type Data = any[]
 
