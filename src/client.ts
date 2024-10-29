@@ -14,6 +14,7 @@ import { Profile } from './profile.js'
 
 export interface SearchConfig {
   abortController?: AbortController
+  abortSignal?: AbortSignal
   fresh?: boolean
   debounce?: number
 }
@@ -61,6 +62,10 @@ export type AnswerSessionParams = {
 }
 
 export { AnswerSession, Message }
+
+function isAbortController(signal: AbortSignal | AbortController | undefined): signal is AbortController {
+  return signal !== undefined && (signal as AbortController)?.signal !== undefined
+}
 
 export class OramaClient {
   private readonly id = createId()
@@ -150,7 +155,12 @@ export class OramaClient {
     const performSearch = async () => {
       try {
         const timeStart = Date.now()
-        searchResults = await this.fetch<Results<AnyDocument>>('search', 'POST', { q: query, sst: this.searchToken }, config?.abortController)
+        searchResults = await this.fetch<Results<AnyDocument>>(
+          'search',
+          'POST',
+          { q: query, sst: this.searchToken },
+          config?.abortSignal ?? config?.abortController
+        )
         const timeEnd = Date.now()
         searchResults.elapsed = await formatElapsedTime(BigInt(timeEnd * CONST.MICROSECONDS_BASE - timeStart * CONST.MICROSECONDS_BASE))
         roundTripTime = timeEnd - timeStart
@@ -243,7 +253,7 @@ export class OramaClient {
       cached = true
     } else {
       const timeStart = Date.now()
-      searchResults = await this.fetch<Results<AnyDocument>>('vector-search2', 'POST', { q: query }, config?.abortController)
+      searchResults = await this.fetch<Results<AnyDocument>>('vector-search2', 'POST', { q: query }, config?.abortSignal ?? config?.abortController)
       const timeEnd = Date.now()
 
       searchResults.elapsed = await formatElapsedTime(BigInt(timeEnd * CONST.MICROSECONDS_BASE - timeStart * CONST.MICROSECONDS_BASE))
@@ -348,10 +358,11 @@ export class OramaClient {
     path: Endpoint,
     method: Method,
     body?: object,
-    abortController?: AbortController,
+    abort?: AbortController | AbortSignal,
     queryParams?: Record<string, string | undefined>
   ): Promise<T> {
-    if (abortController?.signal.aborted === true) {
+    const abortSignal = isAbortController(abort) ? abort?.signal : abort
+    if (abortSignal?.aborted === true) {
       throw new Error('Request aborted')
     }
 
@@ -363,7 +374,7 @@ export class OramaClient {
         // 'x-orama-instance-id': this.id,
         // 'x-orama-version': version
       },
-      signal: abortController?.signal
+      signal: abortSignal
     }
 
     if (method === 'POST' && body !== undefined) {

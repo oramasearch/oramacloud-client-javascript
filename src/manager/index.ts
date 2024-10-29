@@ -4,7 +4,7 @@ import { IndexManager } from './index-manager.js'
 import { API_V1_BASE_URL } from './constants.js'
 
 type CloudManagerConfig = {
-  api_key: string,
+  api_key: string
   baseURL?: string
 }
 

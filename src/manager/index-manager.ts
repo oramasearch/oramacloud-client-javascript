@@ -16,8 +16,8 @@ type CallWebhookPayload<E extends Endpoint> = E extends EndpointSnapshot
     ? any[]
     : E extends EndpointDeploy
       ? undefined
-      : E extends EndpointUpdateSchema 
-        ? { schema: { [key: string]: any }, embeddings?: any }
+      : E extends EndpointUpdateSchema
+        ? { schema: { [key: string]: any }; embeddings?: any }
         : never
 
 export class IndexManager {
