@@ -39,11 +39,11 @@ export interface IOramaClient {
   cache?: Partial<CacheConfig> | false
 }
 
-export interface IOramaClientMultiSearch extends Omit<IOramaClient, 'api_key' | 'endpoint'> {
-  endpoint?: string
+export interface IOramaClientMultiSearch<M extends boolean> extends Omit<IOramaClient, 'api_key' | 'endpoint'> {
+  mergeResults?: M
   indexes: {
     api_key: string
-    id: string
+    endpoint: string
   }[]
 }
 

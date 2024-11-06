@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup'
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from 'node:url'
 
-const entry = fileURLToPath(new URL('src/vue/index.ts', import.meta.url))
+const entry = 'src/vue/index.ts'
 const outDir = fileURLToPath(new URL('dist/vue', import.meta.url))
 
 

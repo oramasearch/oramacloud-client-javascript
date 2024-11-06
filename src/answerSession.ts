@@ -1,7 +1,7 @@
 import type { Results, AnyDocument, SearchParams, AnyOrama, Nullable } from '@orama/orama'
 import { createId } from '@orama/cuid2'
 import { ORAMA_ANSWER_ENDPOINT } from './constants.js'
-import { OramaClient } from './client.js'
+import type { OramaClient } from './client.js'
 import { parseSSE, serializeUserContext } from './utils.js'
 
 export type Context = Results<AnyDocument>['hits']
@@ -13,10 +13,10 @@ export type Message = {
 
 export type InferenceType = 'documentation'
 
-export type AnswerParams<UserContext = unknown> = {
+export type AnswerParams<M extends boolean, UserContext = unknown> = {
   initialMessages: Message[]
   inferenceType: InferenceType
-  oramaClient: OramaClient
+  oramaClient: OramaClient<M>
   userContext?: UserContext
   events?: {
     onMessageChange?: (messages: Message[]) => void
@@ -52,21 +52,21 @@ export type AskParams = SearchParams<AnyOrama> & {
   }
 }
 
-export class AnswerSession {
+export class AnswerSession<M extends boolean> {
   private messages: Message[]
   private inferenceType: InferenceType
-  private oramaClient: OramaClient
+  private oramaClient: OramaClient< M>
   private endpoint: string
   private abortController?: AbortController
-  private events: AnswerParams['events']
-  private userContext?: AnswerParams['userContext']
+  private events: AnswerParams<M>['events']
+  private userContext?: AnswerParams<M>['userContext']
   private conversationID: string
   private lastInteractionParams?: AskParams
   public state: Interaction[] = []
   private systemPrompts?: string[]
 
 
-  constructor(params: AnswerParams) {
+  constructor(params: AnswerParams<M>) {
     // @ts-expect-error - sorry again TypeScript :-)
     const oaramaAnswerHostAddress = params.oramaClient.answersApiBaseURL || ORAMA_ANSWER_ENDPOINT
 

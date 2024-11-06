@@ -11,7 +11,7 @@ import { Collector } from './collector.js'
 import { HeartBeat } from './heartbeat.js'
 import { version } from '../package.json'
 import { Profile } from './profile.js'
-import { ORAMA_SEARCH_BASE } from './constants.js'
+import { MULTI_INDEX_BASE } from './constants.js'
 
 export interface SearchConfig {
   abortController?: AbortController
@@ -45,6 +45,7 @@ type SortByClause = {
 }
 
 export type ClientSearchParams = Override<SearchParams<AnyOrama>, { sortBy?: SortByClauseUnion }> & AdditionalSearchParams
+export type OramaClientSearchResult<M> = M extends true ? Results<DocumentType> : Results<DocumentType>[] 
 
 export type AnswerSessionParams = {
   inferenceType?: InferenceType
@@ -69,15 +70,16 @@ function isAbortController(signal: AbortSignal | AbortController | undefined): s
   return signal !== undefined && (signal as AbortController)?.signal !== undefined
 }
 
-export class OramaClient {
+export class OramaClient<M extends boolean = true> {
   private readonly id = createId()
   private readonly api_key: string
   private readonly endpoint: string
   private readonly multiIndexSearch: boolean
-  private readonly multiIndexIndexes?: IOramaClientMultiSearch['indexes']
+  private readonly mergeResults: M
+  private readonly multiIndexIndexes?: IOramaClientMultiSearch<M>['indexes'] 
   private readonly answersApiBaseURL: string | undefined
   private readonly collector?: Collector
-  private readonly cache?: Cache<Results<AnyDocument>>
+  private readonly cache?: Cache<OramaClientSearchResult<M>>
   private readonly profile: Profile
   private searchDebounceTimer?: any // NodeJS.Timer
   private searchRequestCounter = 0
@@ -86,19 +88,27 @@ export class OramaClient {
   private heartbeat?: HeartBeat
   private initPromise?: Promise<OramaInitResponse | null>
 
-  constructor(params: IOramaClient | IOramaClientMultiSearch) {
+  constructor(params: IOramaClient | IOramaClientMultiSearch<M>) {
     //TODO: fix this once we can handle multi search telemetry
     if('indexes' in params) {
       //this telemetry will be wrong
       this.api_key = params.indexes[0].api_key
-
       this.multiIndexIndexes = params.indexes
-      this.endpoint = params.endpoint || ORAMA_SEARCH_BASE
+
+      //check indexes for endpoint
+      const firstEndpointOrigin = (new URL(params.indexes[0].endpoint)).origin
+      if(params.indexes.some(i => (new URL(i.endpoint)).origin !== firstEndpointOrigin)){
+        throw new Error('All indexes must have the same endpoint origin')
+      }
+      this.endpoint = firstEndpointOrigin + MULTI_INDEX_BASE
       this.multiIndexSearch = true
+      this.mergeResults = params.mergeResults ?? true as M
     }else{
       this.api_key = params.api_key
       this.endpoint = params.endpoint
       this.multiIndexSearch = false
+      //shouldn't matter for single results
+      this.mergeResults = true as M
     }
 
     this.answersApiBaseURL = params.answersApiBaseURL
@@ -120,7 +130,7 @@ export class OramaClient {
     // Cache is enabled by default
     if (params.cache !== false) {
       const cacheParams = {}
-      this.cache = new Cache<Results<AnyDocument>>(cacheParams)
+      this.cache = new Cache<OramaClientSearchResult<M>>(cacheParams)
     }
 
     this.init()
@@ -147,11 +157,39 @@ export class OramaClient {
     this.onAuthTokenExpired = onAuthTokenExpired
   }
 
-  public async search(query: ClientSearchParams, config?: SearchConfig): Promise<Nullable<Results<AnyDocument>>>
+  private addSearchResultsToCollector(searchResults: Nullable<OramaClientSearchResult<M>>, roundTripTime: number, query: ClientSearchParams, cached: boolean) {
+    if (this.collector) {
+      if(Array.isArray(searchResults)){
+        for(const sr of searchResults){
+          this.collector.add({
+            rawSearchString: query.term,
+            resultsCount: sr.hits?.length ?? 0,
+            roundTripTime,
+            query,
+            cached,
+            searchedAt: new Date(),
+            userId: this.profile.getUserId()
+          })
+        }
+      }else{
+      this.collector.add({
+        rawSearchString: query.term,
+        resultsCount: searchResults?.hits?.length ?? 0,
+        roundTripTime,
+        query,
+        cached,
+        searchedAt: new Date(),
+        userId: this.profile.getUserId()
+      })
+    }
+    }
+  }
+
+  public async search(query: ClientSearchParams, config?: SearchConfig): Promise<Nullable<OramaClientSearchResult<M>>>
   public async search<SchemaType extends object, DocumentType extends InternalTypedDocument<SchemaType> = InternalTypedDocument<SchemaType>>(
     query: ClientSearchParams,
     config?: SearchConfig,
-  ): Promise<Nullable<Results<DocumentType>>> {
+  ): Promise<Nullable<OramaClientSearchResult<M>>> {
     await this.initPromise
 
     // Avoid perform search if the user is not authenticated yet
@@ -163,7 +201,7 @@ export class OramaClient {
     const currentRequestNumber = ++this.searchRequestCounter
     const cacheKey = `search-${JSON.stringify(query)}`
 
-    let searchResults: Nullable<Results<AnyDocument>> = null
+    let searchResults: Nullable<OramaClientSearchResult<M>> = null
     let roundTripTime: number
     let cached = false
     const shouldUseCache = config?.fresh !== true && this.cache?.has(cacheKey)
@@ -172,13 +210,20 @@ export class OramaClient {
       try {
         const timeStart = Date.now()
         if(this.multiIndexSearch){
-          searchResults = await this.fetch<Results<AnyDocument>>('multi_search', 'POST', { q: {...query, mergeResults:true}, sst: this.searchToken, indexes: this.multiIndexIndexes }, config?.abortController)
+          searchResults = await this.fetch<OramaClientSearchResult<M>>('multi_search', 'POST', { q: {...query, mergeResults: this.mergeResults}, sst: this.searchToken, indexes: this.multiIndexIndexes }, config?.abortController)
         }else{  
-          searchResults = await this.fetch<Results<AnyDocument>>('search', 'POST', { q: query, sst: this.searchToken }, config?.abortController)
+          searchResults = await this.fetch<OramaClientSearchResult<M>>('search', 'POST', { q: query, sst: this.searchToken }, config?.abortController)
         }
         const timeEnd = Date.now()
-        searchResults.elapsed = await formatElapsedTime(BigInt(timeEnd * CONST.MICROSECONDS_BASE - timeStart * CONST.MICROSECONDS_BASE))
         roundTripTime = timeEnd - timeStart
+        const elapsed = await formatElapsedTime(BigInt(timeEnd * CONST.MICROSECONDS_BASE - timeStart * CONST.MICROSECONDS_BASE))
+        if(!Array.isArray(searchResults)){
+          searchResults.elapsed = elapsed
+        }else{
+          for(const sr of searchResults){
+            sr.elapsed = elapsed
+          }
+        }
         this.cache?.set(cacheKey, searchResults)
       } catch (error: any) {
         if (error.name !== 'AbortError') {
@@ -186,38 +231,17 @@ export class OramaClient {
           throw error
         }
       }
+      this.addSearchResultsToCollector(searchResults, roundTripTime, query, cached)
 
-      if (this.collector) {
-        this.collector.add({
-          rawSearchString: query.term,
-          resultsCount: searchResults?.hits?.length ?? 0,
-          roundTripTime,
-          query,
-          cached,
-          searchedAt: new Date(),
-          userId: this.profile.getUserId()
-        })
-      }
 
       return searchResults
     }
 
     if (shouldUseCache && this.cache) {
       roundTripTime = 0
-      searchResults = this.cache.get(cacheKey) as Results<AnyDocument>
+      searchResults = this.cache.get(cacheKey) as OramaClientSearchResult<M>
       cached = true
-
-      if (this.collector) {
-        this.collector.add({
-          rawSearchString: query.term,
-          resultsCount: searchResults?.hits?.length ?? 0,
-          roundTripTime,
-          query,
-          cached,
-          searchedAt: new Date(),
-          userId: this.profile.getUserId()
-        })
-      }
+      this.addSearchResultsToCollector(searchResults, roundTripTime, query, cached)
     } else {
       if (config?.debounce) {
         return new Promise((resolve, reject) => {
@@ -241,8 +265,7 @@ export class OramaClient {
           }
         })
       }
-
-      return performSearch()
+        return performSearch()
     }
 
     if (currentRequestNumber === this.searchRequestCounter) {
@@ -274,7 +297,7 @@ export class OramaClient {
       searchResults.elapsed = await formatElapsedTime(BigInt(timeEnd * CONST.MICROSECONDS_BASE - timeStart * CONST.MICROSECONDS_BASE))
       roundTripTime = timeEnd - timeStart
 
-      this.cache?.set(cacheKey, searchResults)
+      this.cache?.set(cacheKey, searchResults as OramaClientSearchResult<M>) 
     }
 
     if (this.collector != null) {
@@ -323,8 +346,24 @@ export class OramaClient {
 
   private expirationTimer: ReturnType<typeof setTimeout> | undefined
   private init(): void {
-    this.initPromise = this.fetch<OramaInitResponse>('init', 'GET', undefined, undefined, { token: this.customerUserToken })
-      .then((b) => {
+    let fetchParams: [Endpoint, Method, object?, AbortController?, Record<string,any>?] = [
+      'init',
+      'GET',
+      undefined,
+      undefined,
+      { token: this.customerUserToken }
+    ]
+
+    if(this.multiIndexSearch){
+      fetchParams = [
+        'init_multi_search',
+        'POST',
+        { indexes: this.multiIndexIndexes },
+        undefined,
+        { token: this.customerUserToken }
+      ]
+    }
+    this.initPromise = this.fetch<OramaInitResponse>(...fetchParams).then((b: OramaInitResponse) => {
         this.collector?.setParams({
           endpoint: b.collectUrl,
           deploymentID: b.deploymentID,

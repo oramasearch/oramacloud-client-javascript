@@ -17,7 +17,8 @@ export function useAnswerSession<Document = AnyDocument>(params: AnswerSessionHo
   const [aborted, setAborted] = useState<boolean>(false)
   const [sources, setSources] = useState<Nullable<Results<Document>>>(null)
   const [relatedQueries, setRelatedQueries] = useState<Nullable<string[]>>(null)
-  const sessionRef = useRef<Nullable<AnswerSession>>(null)
+  //no support for multi index answer session yet
+  const sessionRef = useRef<Nullable<AnswerSession<true>>>(null)
 
   useEffect(() => {
     const oramaClient =
