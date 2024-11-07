@@ -1,6 +1,6 @@
 {
   "name": "@oramacloud/vue",
-  "version": "1.3.20",
+  "version": "2.0.0",
   "description": "Orama SDK for Vue",
   "type": "module",
   "sideEffects": false,

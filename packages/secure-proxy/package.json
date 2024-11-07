@@ -1,6 +1,6 @@
 {
   "name": "@oramacloud/secure-proxy",
-  "version": "1.3.20",
+  "version": "2.0.0",
   "description": "Orama SDK client for Node.js, Deno, and Browsers",
   "type": "module",
   "sideEffects": false,
