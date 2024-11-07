@@ -1,0 +1,51 @@
+{
+  "name": "@oramacloud/secure-proxy",
+  "version": "1.3.20",
+  "description": "Orama SDK client for Node.js, Deno, and Browsers",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/proxy.cjs",
+  "module": "./dist/proxy.js",
+  "types": "./dist/proxy.d.ts",
+  "runkitExampleFilename": "./example/runkit.js",
+  "exports": {
+    ".": {
+      "types": "./dist/proxy.d.ts",
+      "browser": "./dist/proxy.global.js",
+      "require": "./dist/proxy.cjs",
+      "import": "./dist/proxy.js"
+    }
+  },
+  "scripts": {
+    "format": "bunx @biomejs/biome format src --write",
+    "watch": "tsup --config tsup.lib.js --watch src",
+    "build": "tsup --config tsup.lib.js",
+    "test": "glob -c \"node --import tsx --no-warnings --test\" \"./tests/**/*.test.ts\""
+  },
+  "keywords": ["orama", "search engine", "sdk"],
+  "files": ["dist", "example/runkit.js"],
+  "author": {
+    "name": "Michele Riva",
+    "email": "michele.riva@oramasearch.com",
+    "url": "https://github.com/MicheleRiva"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@orama/cuid2": "^2.2.3",
+    "@orama/orama": "^2.0.16",
+    "openai": "^4.24.1"
+  },
+  "devDependencies": {
+    "@oramacloud/client": "workspace:*",
+    "@fastify/formbody": "^7.4.0",
+    "dotenv": "^16.3.1",
+    "glob": "^11.0.0",
+    "ts-standard": "^12.0.2",
+    "tsup": "^8.3.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.1.3"
+  },
+  "ts-standard": {
+    "ignore": ["dist", "node_modules"]
+  }
+}
