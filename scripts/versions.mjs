@@ -73,7 +73,7 @@ async function main() {
     console.log(`\x1b[32mCommitting changes and creating a tag (pushing is left to you) ...\x1b[0m`)
     await git.commit(
       'chore: Version bump',
-      packages.map(p => `packages/${p}/package.json`),
+      packages.map(({path:p}) => `${p.replace(/\\/g,'/')}/package.json`),
       { '--no-verify': true },
     )
 
