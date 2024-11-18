@@ -11,7 +11,7 @@
     "test": "turbo test",
     "lint": "biome ci",
     "biome:check": "biome check --write",
-    "bump-version": "node --no-warnings scripts/bump-version.mjs",
+    "bump-version": "node --no-warnings scripts/versions.mjs",
     "build": "turbo build --no-cache",
     "publish-all": "node --no-warnings scripts/publish.mjs"
   },
