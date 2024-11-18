@@ -1,7 +1,7 @@
 # Orama Cloud Ract Client
 
 ```jsx
-import { OramaCloud, useSearch } from "@oramacloud/client/react";
+import { OramaCloud, useSearch } from "@oramacloud/react-client";
 
 export function App() {
   return (
