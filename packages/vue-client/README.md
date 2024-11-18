@@ -10,7 +10,7 @@ Import the composable into your component and it's ready to use.
 </template>
 
 <script setup>
-import { useSearch } from "@oramacloud/vue";
+import { useSearch } from "@oramacloud/vue-client";
 import { orama } from './orama'
 
 const { results } = useSearch({

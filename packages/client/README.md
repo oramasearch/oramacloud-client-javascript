@@ -98,3 +98,13 @@ client.search({
   term: "red leather shoes",
 });
 ```
+
+### Related packages
+
+React, vue and secure proxy are now available as separate packages:
+
+* https://www.npmjs.com/package/@oramacloud/react-client
+
+* https://www.npmjs.com/package/@oramacloud/vue-client
+
+* https://www.npmjs.com/package/@oramacloud/secure-proxy

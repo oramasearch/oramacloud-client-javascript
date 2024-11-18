@@ -4,14 +4,20 @@
   "description": "Orama SDK for Node.js, Deno, and Browsers",
   "type": "module",
   "sideEffects": false,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "test": "turbo test",
     "lint": "biome ci",
     "biome:check": "biome check --write",
     "build": "turbo build --no-cache"
   },
-  "keywords": ["orama", "search engine", "sdk"],
+  "keywords": [
+    "orama",
+    "search engine",
+    "sdk"
+  ],
   "author": {
     "name": "Michele Riva",
     "email": "michele.riva@oramasearch.com",
@@ -20,10 +26,15 @@
   "license": "ISC",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "semver": "^7.6.3",
+    "simple-git": "^3.27.0",
     "turbo": "^2.1.1"
   },
   "ts-standard": {
-    "ignore": ["dist", "node_modules"]
+    "ignore": [
+      "dist",
+      "node_modules"
+    ]
   },
   "packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c"
 }

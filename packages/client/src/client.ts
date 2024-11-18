@@ -45,7 +45,7 @@ type SortByClause = {
 }
 
 export type ClientSearchParams = Override<SearchParams<AnyOrama>, { sortBy?: SortByClauseUnion }> & AdditionalSearchParams
-export type OramaClientSearchResult<M> = M extends true ? Results<DocumentType> : Results<DocumentType>[]
+export type OramaClientSearchResult<M> = M extends true ? Results<AnyDocument> : Results<AnyDocument>[]
 
 export type AnswerSessionParams = {
   inferenceType?: InferenceType
@@ -186,7 +186,7 @@ export class OramaClient<M extends boolean = true> {
   }
 
   public async search(query: ClientSearchParams, config?: SearchConfig): Promise<Nullable<OramaClientSearchResult<M>>>
-  public async search<SchemaType extends object, DocumentType extends InternalTypedDocument<SchemaType> = InternalTypedDocument<SchemaType>>(
+  public async search(
     query: ClientSearchParams,
     config?: SearchConfig
   ): Promise<Nullable<OramaClientSearchResult<M>>> {
