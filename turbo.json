@@ -5,6 +5,9 @@
       "cache": false,
       "dependsOn": ["^build"]
     },
+    "publish":{
+      "dependsOn": ["build", "^publish"]
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },

@@ -21,7 +21,7 @@ const getPackages = () => {
 
 
 const dryRun = process.env.DRY_RUN === 'true'
-const skipGit = true //process.env.SKIP_GIT === 'true'
+const skipGit = process.env.SKIP_GIT === 'true'
 
 const packages = await getPackages()
 
