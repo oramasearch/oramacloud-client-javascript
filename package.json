@@ -11,7 +11,8 @@
     "test": "turbo test",
     "lint": "biome ci",
     "biome:check": "biome check --write",
-    "build": "turbo build --no-cache"
+    "build": "turbo build --no-cache",
+    "publish": "turbo publish"
   },
   "keywords": [
     "orama",
