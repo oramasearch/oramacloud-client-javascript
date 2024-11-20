@@ -39,7 +39,7 @@
   "license": "ISC",
   "dependencies": {
     "@orama/cuid2": "^2.2.3",
-    "@orama/orama": "^2.0.16",
+    "@orama/orama": "^3.0.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
