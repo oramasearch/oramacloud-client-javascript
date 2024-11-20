@@ -1,6 +1,7 @@
+// biome-ignore lint/style/useImportType: using import type causes issues
+import React from 'react'
 import type { AnyDocument, Nullable, Results } from '@orama/orama'
 import { type ClientSearchParams, OramaClient } from '@oramacloud/client'
-import type React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
 
 export { useAnswerSession } from './useAnswerSession.jsx'
