@@ -69,7 +69,11 @@ async function main() {
 
   for (const {path:pkgPath} of packages) {
     const cwd = resolve(rootDir,  pkgPath)
-    await execute('pnpm', 'publish', cwd)
+    try{
+      await execute('pnpm', 'publish', cwd)
+    }catch(e){
+      console.log(e)
+    }
   }
 }
 
