@@ -35,7 +35,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@orama/orama": "^2.0.16",
+    "@orama/orama": "^3.0.0",
     "react": "^18.2.0",
     "@oramacloud/client": "workspace:*",
     "lodash": "^4.17.21"
