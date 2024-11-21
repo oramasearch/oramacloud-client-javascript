@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "turbo test",
+    "test": "dotenvx run -- turbo test",
     "lint": "biome ci",
     "biome:check": "biome check --write",
     "bump-version": "node --no-warnings scripts/versions.mjs",
@@ -28,6 +28,7 @@
   "license": "ISC",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@dotenvx/dotenvx": "^1.24.4",
     "semver": "^7.6.3",
     "simple-git": "^3.27.0",
     "turbo": "^2.1.1"
