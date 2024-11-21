@@ -10,7 +10,10 @@
   "runkitExampleFilename": "./example/runkit.js",
   "exports": {
     "types": "./dist/index.d.ts",
-    "browser": "./dist/index.global.js",
+    "browser": {
+      "import": "./dist/index.js",
+       "require": "./dist/index.global.js"
+    },
     "import": "./dist/index.js",
     "require": "./dist/index.cjs",
     "default": "./dist/index.js"
