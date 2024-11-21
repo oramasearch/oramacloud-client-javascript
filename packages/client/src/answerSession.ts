@@ -27,6 +27,7 @@ export type AnswerParams<M extends boolean, UserContext = unknown> = {
     onRelatedQueries?: (relatedQueries: string[]) => void
     onNewInteractionStarted?: (interactionId: string) => void
     onStateChange?: (state: Interaction[]) => void
+    onInteractionDone?: (interaction: Interaction) => void
   }
   systemPrompts?: string[]
 }
@@ -38,6 +39,8 @@ export type Interaction<T = AnyDocument> = {
   relatedQueries: Nullable<string[]>
   sources: Nullable<Results<T>>
   translatedQuery: Nullable<SearchParams<AnyOrama>>
+  segment: Nullable<string>
+  trigger: Nullable<string>
   aborted: boolean
   loading: boolean
   error: boolean
@@ -166,6 +169,8 @@ export class AnswerSession<M extends boolean> {
       relatedQueries: null,
       sources: null,
       translatedQuery: null,
+      segment: null,
+      trigger: null,
       aborted: false,
       loading: true,
       error: false,
@@ -282,6 +287,21 @@ export class AnswerSession<M extends boolean> {
                 this.events.onStateChange(this.state)
               }
 
+              // MANAGE INCOMING METADATA
+            } else if (parsedMessage.type === 'conversation-metadata') {
+              const { segment, trigger } = parsedMessage.message
+              if (segment) {
+                this.state[currentStateIndex].segment = segment
+              }
+
+              if (trigger) {
+                this.state[currentStateIndex].trigger = trigger
+              }
+
+              if (this.events?.onStateChange) {
+                this.events.onStateChange(this.state)
+              }
+
               // MANAGE INCOMING RELATED QUERIES
             } else if (parsedMessage.type === 'related-queries') {
               this.state[currentStateIndex].relatedQueries = parsedMessage.message
@@ -342,6 +362,10 @@ export class AnswerSession<M extends boolean> {
 
       if (this.events?.onStateChange) {
         this.events.onStateChange(this.state)
+      }
+
+      if (this.events?.onInteractionDone) {
+        this.events.onInteractionDone(this.state[currentStateIndex])
       }
 
       if (this.events?.onMessageLoading) {

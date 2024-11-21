@@ -1,5 +1,5 @@
 import type { AnyDocument, AnyOrama, Nullable, Results, SearchParams } from '@orama/orama'
-import type { AnswerSessionParams, Message } from '@oramacloud/client'
+import type { AnswerSessionParams, Message, Interaction } from '@oramacloud/client'
 
 import { AnswerSession, OramaClient } from '@oramacloud/client'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -14,6 +14,7 @@ export function useAnswerSession<Document = AnyDocument>(params: AnswerSessionHo
   const [error, setError] = useState<Nullable<Error>>(null)
   const [aborted, setAborted] = useState<boolean>(false)
   const [sources, setSources] = useState<Nullable<Results<Document>>>(null)
+  const [interaction, setInteraction] = useState<Nullable<Interaction>>(null)
   const [relatedQueries, setRelatedQueries] = useState<Nullable<string[]>>(null)
   //no support for multi index answer session yet
   const sessionRef = useRef<Nullable<AnswerSession<true>>>(null)
@@ -47,6 +48,9 @@ export function useAnswerSession<Document = AnyDocument>(params: AnswerSessionHo
         },
         onRelatedQueries: (relatedQueries) => {
           setRelatedQueries(relatedQueries)
+        },
+        onInteractionDone: (interaction) => {
+          setInteraction(interaction)
         }
       }
     })
@@ -83,6 +87,7 @@ export function useAnswerSession<Document = AnyDocument>(params: AnswerSessionHo
     error,
     sources,
     relatedQueries,
+    interaction,
     ask,
     clearSession
   }
