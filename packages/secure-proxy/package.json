@@ -11,7 +11,10 @@
   "exports": {
     ".": {
       "types": "./dist/proxy.d.ts",
-      "browser": "./dist/proxy.global.js",
+      "browser": {
+        "import": "./dist/index.js",
+        "require": "./dist/index.global.js"
+      },
       "require": "./dist/proxy.cjs",
       "import": "./dist/proxy.js"
     }
