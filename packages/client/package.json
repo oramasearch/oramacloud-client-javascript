@@ -9,12 +9,10 @@
   "types": "./dist/index.d.ts",
   "runkitExampleFilename": "./example/runkit.js",
   "exports": {
-    ".": {
       "types": "./dist/index.d.ts",
       "browser": "./dist/index.global.js",
       "require": "./dist/index.cjs",
       "import": "./dist/index.js"
-    }
   },
   "scripts": {
     "watch": "tsup --config tsup.lib.js --watch src",
