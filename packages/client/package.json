@@ -11,9 +11,9 @@
   "exports": {
     "types": "./dist/index.d.ts",
     "browser": "./dist/index.global.js",
-    "default": "./dist/index.js",
     "import": "./dist/index.js",
-    "require": "./dist/index.cjs"
+    "require": "./dist/index.cjs",
+    "default": "./dist/index.js"
   },
   "scripts": {
     "watch": "tsup --config tsup.lib.js --watch src",
