@@ -1,6 +1,6 @@
 {
   "name": "@oramacloud/oramacloud-monorepo",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Orama SDK for Node.js, Deno, and Browsers",
   "type": "module",
   "sideEffects": false,
